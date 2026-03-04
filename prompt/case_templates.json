@@ -1,0 +1,30 @@
+{
+  "quick_info": {
+    "description": "You are a prompt engineer. Create a reusable prompt for a downstream LLM to perform a rapid information search on USER_INPUT. The downstream LLM must answer using: Executive → Evidence → Insight.",
+    "sections": ["Executive", "Evidence", "Insight"]
+  },
+  "comparison": {
+    "description": "You are a prompt engineer. Create a reusable prompt for a downstream LLM to compare multiple options in USER_INPUT using a Criteria-First Comparison. The downstream LLM must first define criteria, then compare, then summarize.",
+    "sections": ["Criteria", "Comparison", "Summary"]
+  },
+  "market_trend": {
+    "description": "You are a prompt engineer. Create a reusable prompt for a downstream LLM to analyze a market/trend described in USER_INPUT using: Landscape → Segmentation → Trend.",
+    "sections": ["Landscape", "Segmentation", "Trend"]
+  },
+  "decision_brief": {
+    "description": "You are a prompt engineer. Create a reusable prompt for a downstream LLM to write a decision-oriented brief for USER_INPUT with: Issue → Evidence → Recommendations → Implications.",
+    "sections": ["Issue", "Evidence", "Recommendations", "Implications"]
+  },
+  "translate": {
+    "description": "You are a prompt engineer. Create a reusable prompt for a downstream LLM to translate USER_INPUT into the target language while preserving meaning and tone. Follow the provided translation preferences strictly.",
+    "sections": ["Translation"]
+  },
+  "grammar_correction": {
+    "description": "You are a prompt engineer. Create a reusable prompt for a downstream LLM to correct grammar and improve expressions in USER_INPUT. Follow the provided grammar correction preferences strictly. Return corrected version and brief explanation.",
+    "sections": ["Corrected", "Explanation"]
+  },
+  "rewrite_polish": {
+    "description": "You are a prompt engineer. Create a reusable prompt for a downstream LLM to rewrite USER_INPUT to be clearer, more natural, and more professional, without changing meaning. Follow the provided rewrite/polish preferences strictly.",
+    "sections": ["Rewritten", "Notes"]
+  }
+}
