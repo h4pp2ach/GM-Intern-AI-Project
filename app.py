@@ -6,6 +6,7 @@ import json
 from dataclasses import dataclass, field
 from typing import List, Dict, Any, Optional, Iterator
 
+from ui_i18n import I18N
 from prompt.config import PromptConfig
 from prompt.builder import generate_prompt
 from helpers import none_if_blank_or_none_str, build_suffix, build_user_input_section
@@ -140,15 +141,37 @@ def call_llm_stream(
 # =============================================================================
 def main():
     st.set_page_config(page_title="Prompt Generator Demo", layout="wide")
-    st.title("🧩 Prompt Generator Demo")
+
+    # -------------------------
+    # UI language toggle (KR/EN)
+    # -------------------------
+    if "ui_lang_toggle" not in st.session_state:
+        st.session_state.ui_lang_toggle = False  # False=KR, True=EN
+
+    ui_lang = "en" if st.session_state.ui_lang_toggle else "ko"
+    T = I18N[ui_lang]
+
+    left, right = st.columns([0.88, 0.12], vertical_alignment="center")
+
+    with left:
+        st.title(T["title"])
+
+    with right:
+        st.markdown(
+            f"<div style='text-align:center; font-size:12px; opacity:.75; white-space:nowrap;'>"
+            f"{'EN' if ui_lang=='en' else 'KR'}</div>",
+            unsafe_allow_html=True
+        )
+
+        a, b, c = st.columns([0.25, 0.50, 0.25], gap="small")
+        with b:
+            st.toggle("", key="ui_lang_toggle", label_visibility="collapsed")
 
     st.markdown(
         """
         <style>
         /* ===== Radio -> Tab-like UI ===== */
-        div[role="radiogroup"] {
-            gap: 8px;
-        }
+        div[role="radiogroup"] { gap: 8px; }
         div[role="radiogroup"] > label {
             border: 1px solid rgba(49,51,63,.2);
             border-radius: 10px;
@@ -209,29 +232,19 @@ def main():
         </style>
 
         <a class="floating-link-btn" href="{FLOATING_BUTTON_URL}" target="_blank" rel="noopener noreferrer">
-        🔗 바로 질문하러 갈까요?
+        {T["floating_btn"]}
         </a>
         """,
         unsafe_allow_html=True,
     )
 
-    # cfg = load_config("config.json")
-    # MODEL_URL = cfg.get("MODEL_URL", "")
-    # MODEL_NAME = cfg.get("MODEL_NAME", "")
-    # BEARER_TOKEN = cfg.get("BEARER_TOKEN", "")
-    # ASMS_HEADER = cfg.get("ASMS_HEADER", "")
-
     # -------------------------
     # 1) Top-level case 선택
     # -------------------------
-    st.markdown("#### Case 선택")
+    st.markdown(T["case_select"])
     top_case = st.selectbox(
         label="",
-        options=[
-            "1. 🔎 정보 탐색 및 정리",
-            "2. ✍️ 번역 및 문법 교정",
-            "3. ✨ 문장(표현) 다듬기",
-        ],
+        options=T["case_options"],
         index=0,
         label_visibility="collapsed",
         key="top_case",
@@ -252,6 +265,7 @@ def main():
             "grammar_tone_ui",
             "polish_freedom_ui",
             "polish_tone_ui",
+            "length_ui",
         ]:
             if k in st.session_state:
                 del st.session_state[k]
@@ -260,15 +274,15 @@ def main():
     # -------------------------
     # 2) 세부 Case 선택
     # -------------------------
-    st.markdown("##### 세부 Case")
+    st.markdown(T["subcase_select"])
 
     if top_case_id == "1":
-        label_map = {
-            "빠른 정보 탐색": "quick_info",
-            "비교 탐색": "comparison",
-            "시장/트렌드 분석": "market_trend",
-            "의사 결정": "decision_brief",
-        }
+        label_map = dict(
+            zip(
+                T["info_subcases"],
+                ["quick_info", "comparison", "market_trend", "decision_brief"],
+            )
+        )
         picked = st.radio(
             "subcase_info_label",
             options=list(label_map.keys()),
@@ -279,10 +293,7 @@ def main():
         selected_sub = label_map[picked]
 
     elif top_case_id == "2":
-        label_map = {
-            "번역": "translate",
-            "문법 교정": "grammar_correction",
-        }
+        label_map = dict(zip(T["tg_subcases"], ["translate", "grammar_correction"]))
         picked = st.radio(
             "subcase_translate_grammar_label",
             options=list(label_map.keys()),
@@ -293,9 +304,7 @@ def main():
         selected_sub = label_map[picked]
 
     else:
-        label_map = {
-            "문장(표현) 다듬기": "rewrite_polish",
-        }
+        label_map = {T["polish_subcases"][0]: "rewrite_polish"}
         picked = st.radio(
             "subcase_polish_label",
             options=list(label_map.keys()),
@@ -309,16 +318,19 @@ def main():
     # 3) Sidebar (case별 기본 옵션)
     # -------------------------
     with st.sidebar:
-        st.header("⚙️ 옵션 설정")
+        st.header(T["sidebar_header"])
 
-        # 공통: 출력 언어
+        # 공통: 출력 언어 (LLM 출력 언어; UI 언어와 별개)
         prompt_language = st.selectbox(
-            "출력 언어", options=["한국어", "영어"], index=0, key="prompt_language"
+            T["output_lang"],
+            options=[T["lang_ko"], T["lang_en"]],
+            index=0,
+            key="prompt_language",
         )
-        prompt_lang_code = "ko" if prompt_language == "한국어" else "en"
+        prompt_lang_code = "ko" if prompt_language == T["lang_ko"] else "en"
 
         st.divider()
-        st.subheader("기본 옵션")
+        st.subheader(T["basic_opt"])
 
         # defaults
         thinking_style = "데이터 기반 사고"
@@ -338,59 +350,56 @@ def main():
         # case별 기본 옵션 UI
         if top_case_id == "1":
             thinking_style = st.selectbox(
-                "사고 방식 설정", ["데이터 기반 사고", "비판적", "창의적"], index=0, key="thinking_style"
+                T["thinking_style"],
+                options=T["thinking_style_options"],
+                index=0,
+                key="thinking_style",
             )
             answer_tone = st.selectbox(
-                "답변 톤", ["공식 문체", "친근하게", "간결하게"], index=0, key="answer_tone"
+                T["answer_tone"],
+                options=T["answer_tone_options"],
+                index=0,
+                key="answer_tone",
             )
 
         elif top_case_id == "2" and selected_sub == "translate":
             style_ui = st.selectbox(
-                "의역/자연스러움 정도",
-                ["직역(정확)", "균형", "의역(자연)"],
+                T["translation_style"],
+                options=T["translation_style_options"],
                 index=1,
                 key="translation_style_ui",
             )
-            translation_style = {"직역(정확)": "literal", "균형": "balanced", "의역(자연)": "natural"}[style_ui]
+            # map UI label -> internal code
+            translation_style = T["translation_style_map"][style_ui]
 
             tone_ui = st.selectbox(
-                "번역 톤",
-                ["기본", "공식", "친근"],
+                T["translation_tone"],
+                options=T["translation_tone_options"],
                 index=0,
                 key="translation_tone_ui",
             )
-            translation_tone = {"기본": "neutral", "공식": "formal", "친근": "casual"}[tone_ui]
+            translation_tone = T["translation_tone_map"][tone_ui]
 
-            # 번역일 때는 기존 thinking/tone는 의미 없으니 고정값 유지(빈값도 가능)
             thinking_style = ""
             answer_tone = ""
 
         elif top_case_id == "2" and selected_sub == "grammar_correction":
             scope_ui = st.radio(
-                "교정 범위",
-                ["문법/어휘만 개선(문체/말투 유지)", "말투/문체까지 개선(톤 변경 허용)"],
+                T["grammar_scope"],
+                options=T["grammar_scope_options"],
                 horizontal=False,
                 key="grammar_scope_ui",
             )
-            grammar_scope = {
-                "문법/어휘만 개선(문체/말투 유지)": "grammar_vocab_only",
-                "말투/문체까지 개선(톤 변경 허용)": "include_tone",
-            }[scope_ui]
+            grammar_scope = T["grammar_scope_map"][scope_ui]
 
             if grammar_scope == "include_tone":
                 tone_ui = st.selectbox(
-                    "원하는 톤",
-                    ["기존 유지", "공식", "친근", "전문적으로", "간결하게"],
+                    T["desired_tone"],
+                    options=T["desired_tone_options"],
                     index=0,
                     key="grammar_tone_ui",
                 )
-                grammar_tone = {
-                    "기존 유지": "keep",
-                    "공식": "formal",
-                    "친근": "casual",
-                    "전문적으로": "professional",
-                    "간결하게": "concise",
-                }[tone_ui]
+                grammar_tone = T["desired_tone_map"][tone_ui]
             else:
                 grammar_tone = "keep"
 
@@ -399,30 +408,20 @@ def main():
 
         elif top_case_id == "3" and selected_sub == "rewrite_polish":
             freedom_ui = st.selectbox(
-                "문체 변화 자유도",
-                ["낮음(원문 최대 유지)", "중간(자연스럽게 다듬기)", "높음(상당히 재작성 허용)"],
+                T["polish_freedom"],
+                options=T["polish_freedom_options"],
                 index=1,
                 key="polish_freedom_ui",
             )
-            polish_freedom = {
-                "낮음(원문 최대 유지)": "low",
-                "중간(자연스럽게 다듬기)": "medium",
-                "높음(상당히 재작성 허용)": "high",
-            }[freedom_ui]
+            polish_freedom = T["polish_freedom_map"][freedom_ui]
 
             tone_ui = st.selectbox(
-                "원하는 톤",
-                ["기존 유지", "전문적으로", "공식", "친근", "간결하게"],
+                T["desired_tone"],
+                options=T["desired_tone_options_polish"],
                 index=1,
                 key="polish_tone_ui",
             )
-            polish_tone = {
-                "기존 유지": "keep",
-                "전문적으로": "professional",
-                "공식": "formal",
-                "친근": "casual",
-                "간결하게": "concise",
-            }[tone_ui]
+            polish_tone = T["desired_tone_map_polish"][tone_ui]
 
             thinking_style = ""
             answer_tone = ""
@@ -430,78 +429,93 @@ def main():
         three_variants = False
         if top_case_id == "2" or top_case_id == "3":
             three_variants = st.checkbox(
-                "3가지 버전 제시",
+                T["three_variants"],
                 value=True,
-                help="3가지 버전의 응답을 제시하도록 지시하여 더 많은 선택 옵션을 얻을 수 있습니다.",
+                help=T["three_variants_help"],
                 key="three_variants",
             )
         else:
-            # 1번 케이스에서만 '답변 길이' 유지
-            length_ui = st.selectbox("답변 길이", ["짧게", "기본", "길게"], index=1, key="length_ui")
-            length_map = {"짧게": "short", "기본": "default", "길게": "long"}
-            length_mode = length_map[length_ui]
+            length_ui = st.selectbox(
+                T["length"],
+                options=T["length_options"],
+                index=1,
+                key="length_ui",
+            )
+            length_mode = T["length_map"][length_ui]
 
         st.divider()
-        st.subheader("고급 옵션")
+        st.subheader(T["advanced_opt"])
 
+        # provide_sources default differs by case (keep your behavior)
         if top_case_id == "1":
             provide_sources = st.checkbox(
-                "환각 문제 개선",
+                T["hallucination"],
                 value=True,
-                help="답변에 반드시 출처를 포함하도록 지시하여 환각(hallucination) 문제를 개선할 수 있습니다.",
+                help=T["hallucination_help"],
                 key="provide_sources",
             )
-        elif top_case_id == "2" or top_case_id == "3":
+        else:
             provide_sources = st.checkbox(
-                "환각 문제 개선",
+                T["hallucination"],
                 value=False,
-                help="답변에 반드시 출처를 포함하도록 지시하여 환각(hallucination) 문제를 개선할 수 있습니다.",
+                help=T["hallucination_help"],
                 key="provide_sources",
             )
 
         allow_clarifying_questions = st.checkbox(
-            "답변 전 질문 허용",
+            T["clarify"],
             value=False,
-            help="역질문을 통해 모호한 사항을 해결하고, 사용자의 의도를 보다 정확히 반영할 수 있도록 지시합니다.",
+            help=T["clarify_help"],
             key="allow_clarifying_questions",
         )
         avoid_speculation = st.checkbox(
-            "추측 금지",
+            T["no_spec"],
             value=False,
-            help="명확한 근거나 출처가 없는 답변을 하지 않도록 지시합니다.",
+            help=T["no_spec_help"],
             key="avoid_speculation",
         )
 
         st.divider()
-        st.subheader("역할 / 독자 / 범위 (선택사항)")
-        role_domain = none_if_blank_or_none_str(st.text_input("Role domain (optional)", value="", key="role_domain"))
-        audience = none_if_blank_or_none_str(st.text_input("Audience (optional)", value="", key="audience"))
-        time_range = none_if_blank_or_none_str(st.text_input("Time range (optional)", value="", key="time_range"))
+        st.subheader(T["role_scope"])
+        role_domain = none_if_blank_or_none_str(
+            st.text_input(T["role_domain"], value="", key="role_domain")
+        )
+        audience = none_if_blank_or_none_str(
+            st.text_input(T["audience"], value="", key="audience")
+        )
+        time_range = none_if_blank_or_none_str(
+            st.text_input(T["time_range"], value="", key="time_range")
+        )
 
         st.divider()
-        st.subheader("출력 구조 (선택사항)")
-        output_structure = st.text_area("Output formatting constraint (optional)", value="", height=110, key="output_structure")
+        st.subheader(T["output_structure"])
+        output_structure = st.text_area(
+            T["output_format_constraint"],
+            value="",
+            height=110,
+            key="output_structure",
+        )
         output_structure = none_if_blank_or_none_str(output_structure)
 
     # -------------------------
     # 4) USER_INPUT
     # -------------------------
-    st.markdown("### 📝 사용자 입력 ")
+    st.markdown(T["user_input_header"])
     user_input = st.text_area(
         "USER_INPUT",
-        placeholder="여기에 질문을 입력하세요...",
+        placeholder=T["user_input_placeholder"],
         height=220,
         label_visibility="collapsed",
         key="user_input",
     )
 
-    gen = st.button("프롬프트 생성", type="primary", use_container_width=True)
+    gen = st.button(T["gen_btn"], type="primary", use_container_width=True)
 
-    st.markdown("### 📄 생성된 프롬프트")
+    st.markdown(T["generated_prompt"])
     out_placeholder = st.empty()
     out_placeholder.code("", language="")
 
-    # Goal: auto
+    # Goal: auto (these are for LLM prompt generation; keep as-is English)
     if top_case_id == "1":
         goal = "If no goal is specified, analyze USER_INPUT and automatically generate a clear, specific, actionable goal."
     elif top_case_id == "2":
@@ -509,15 +523,15 @@ def main():
             goal = "Translate USER_INPUT according to the specified translation preferences."
         elif selected_sub == "grammar_correction":
             goal = "Correct grammar and improve expressions in USER_INPUT according to the specified scope, while preserving the original meaning and intent."
-    elif top_case_id == "3":
+    else:
         goal = "Rewrite and polish USER_INPUT to improve clarity, naturalness, and professionalism, without changing its original meaning."
 
     if gen:
         if not user_input.strip():
-            st.error("USER_INPUT이 비어 있습니다.")
+            st.error(T["err_empty_input"])
             return
         if not (MODEL_URL and MODEL_NAME and BEARER_TOKEN):
-            st.error("config.json에 MODEL_URL / MODEL_NAME / BEARER_TOKEN 설정이 필요합니다.")
+            st.error(T["err_missing_config"])
             return
 
         cfg_obj = PromptConfig(
@@ -559,16 +573,16 @@ def main():
 
             user_block = build_user_input_section(user_input, prompt_lang_code)
             acc_final = acc + user_block + build_suffix(
-                        provide_sources,
-                        avoid_speculation,
-                        allow_clarifying_questions,
-                        three_variants,
-                        prompt_lang_code,
-                    )
+                provide_sources,
+                avoid_speculation,
+                allow_clarifying_questions,
+                three_variants,
+                prompt_lang_code,
+            )
             out_placeholder.code(acc_final, language="")
 
         except Exception as e:
-            st.error(f"Streaming error: {e}")
+            st.error(f"{T['streaming_error_prefix']}{e}")
 
 
 if __name__ == "__main__":
