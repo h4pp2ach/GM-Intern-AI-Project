@@ -165,7 +165,7 @@ def main():
 
         a, b, c = st.columns([0.25, 0.50, 0.25], gap="small")
         with b:
-            st.toggle("", key="ui_lang_toggle", label_visibility="collapsed")
+            st.toggle(label="UI language", key="ui_lang_toggle", label_visibility="collapsed")
 
     st.markdown(
         """
@@ -243,7 +243,7 @@ def main():
     # -------------------------
     st.markdown(T["case_select"])
     top_case = st.selectbox(
-        label="",
+        label="Top-level case",
         options=T["case_options"],
         index=0,
         label_visibility="collapsed",
