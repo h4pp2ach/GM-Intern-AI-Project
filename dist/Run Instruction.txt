@@ -1,0 +1,13 @@
+AVD나 개인 PC가 아닌 회사 로컬PC에서 실행해주세요 !! (사내 LLM API 접근 필요)
+
+1. 압축 해제 후 GM_AI-PromptTool.exe 실행파일 실행
+2. Window 경고가 뜨는 경우 [추가정보] -> [실행] 을 눌러 진행
+3. 화면에 다음과 같은 문구가 뜨면 정상 동작 (초기 실행시 약 10~15초의 시간이 소요됩니다.)
+
+	You can now view your Streamlit app in your browser.
+	URL: http://localhost:85XX
+
+
+Error 발생시)
++ 화면에 정상 동작 문구와 URL이 떴음에도 창이 열리지 않는다면, URL을 주소창에 직접 입력해주세요.
++ 터미널 창에 Email 입력 문구가 뜨고 멈춰있는 경우 입력 없이 엔터 누르시면 진행이 가능합니다.

@@ -1,0 +1,6 @@
+[global]
+developmentMode = false
+
+[server]
+address = "localhost"
+headless = true

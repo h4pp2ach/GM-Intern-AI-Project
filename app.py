@@ -185,11 +185,13 @@ def main():
             font-weight: 600;
         }
 
-        /* ===== st.code: wrap visually (keep copy button) ===== */
+        /* ===== st.code: wrap visually ===== */
         .stCodeBlock pre,
         .stCodeBlock pre code,
-        div[data-testid="stCodeBlock"] pre,
-        div[data-testid="stCodeBlock"] pre code {
+        div[data-testid="stCode"] pre,
+        div[data-testid="stCode"] pre code,
+        .stCode pre,
+        .stCode pre code {
             white-space: pre-wrap !important;
             word-break: break-word !important;
             overflow-wrap: anywhere !important;
@@ -450,7 +452,7 @@ def main():
         if top_case_id == "1":
             provide_sources = st.checkbox(
                 T["hallucination"],
-                value=True,
+                value=False,
                 help=T["hallucination_help"],
                 key="provide_sources",
             )
